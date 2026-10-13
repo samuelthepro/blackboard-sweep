@@ -1,0 +1,15 @@
+{
+  "name": "blackboard-sweep",
+  "description": "Sweep an Ole Miss Blackboard account: download new class files with text copies, track announcements and due dates, check submissions, and add deadlines to Apple Reminders and Calendar.",
+  "author": {
+    "name": "Samuel Long"
+  },
+  "repository": "https://github.com/samuelthepro/blackboard-sweep",
+  "keywords": [
+    "blackboard",
+    "ole-miss",
+    "school",
+    "reminders",
+    "macos"
+  ]
+}

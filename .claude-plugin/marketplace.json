@@ -1,0 +1,28 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "blackboard-sweep",
+  "owner": {
+    "name": "Samuel Long"
+  },
+  "metadata": {
+    "description": "Keep up with Ole Miss Blackboard classes from Claude Code."
+  },
+  "plugins": [
+    {
+      "name": "blackboard-sweep",
+      "description": "Sweep an Ole Miss Blackboard account: download new class files with text copies, track announcements and due dates, check submissions, and add deadlines to Apple Reminders and Calendar.",
+      "author": {
+        "name": "Samuel Long"
+      },
+      "source": "./plugin",
+      "category": "productivity",
+      "tags": [
+        "blackboard",
+        "ole-miss",
+        "school",
+        "reminders",
+        "macos"
+      ]
+    }
+  ]
+}
