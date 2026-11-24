@@ -293,15 +293,16 @@ def cmd_ingest(a):
         for col in c['cols']:
             d = to_local(col.get('due'))
             if d and d > now - dt.timedelta(days=1):
-                due.append((d, '%s: %s' % (short, col['n'])))
+                # a gradebook-only column (no content id) often carries its creation time as the due date
+                due.append((d, '%s: %s' % (short, col['n']), '' if col.get('cid') else '  (gradebook-only item: may just be its creation time)'))
         for e in pull.get('cal', []):
             if e[0] == c['id']:
                 d = to_local(e[2])
                 key = '%s: %s' % (short, e[1])
                 if d and d > now - dt.timedelta(days=1) and not any(x[1] == key and abs((x[0] - d).total_seconds()) < 3600 for x in due):
-                    due.append((d, key + ' (calendar)'))
+                    due.append((d, key + ' (calendar)', ''))
     summary.append('\nUPCOMING DUE DATES ON BLACKBOARD (local time):')
-    summary += ['  %s  %s' % (fmt(d), t) for d, t in sorted(due)] or ['  (none)']
+    summary += ['  %s  %s%s' % (fmt(d), t, note) for d, t, note in sorted(due)] or ['  (none)']
     if unmapped:
         summary.append('\nCLASSES WITHOUT A FOLDER YET (suggested commands; adjust names if you like):')
         for c in unmapped:

@@ -11,7 +11,13 @@
 const B = 'https://blackboard.olemiss.edu';
 const iso = t => t ? new Date(typeof t === 'number' ? t : Date.parse(t)).toISOString().slice(0, 16) : '';
 const clean = h => (h || '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
-const j = async u => { const r = await fetch(B + u, { credentials: 'include' }); return r.ok ? r.json() : { err: r.status }; };
+const j = async u => {
+  for (let k = 0; ; k++) {
+    const r = await fetch(B + u, { credentials: 'include' });
+    if (r.status === 429 && k < 4) { await new Promise(s => setTimeout(s, 700 * (k + 1))); continue; } // too many requests at once
+    return r.ok ? r.json() : { err: r.status };
+  }
+};
 const show = text => { document.body.innerHTML = '<pre></pre>'; document.querySelector('pre').textContent = text.replace(/\?[^"'\s]*/g, ''); };
 
 const me = await j('/learn/api/public/v1/users/me');

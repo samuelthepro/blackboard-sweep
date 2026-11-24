@@ -93,14 +93,37 @@ Item types in the report:
   Each link it returns is either the document's page (`navigate` a tab there, then
   `get_page_text`; these are not `/ultra/` pages, so that is safe) or a file embedded in the
   document (download it like a FILE, then `bbsweep grab <the DOC's id> --to ...`).
+  An image inside a document is an `href` in the raw body at
+  `/learn/api/v1/courses/COURSE/contents/BODY_ID` (`body.rawText`); download it the same way.
 - **ASSIGNMENT** (assignments, tests, quizzes): note the due date (it is in the UPCOMING list
-  when the gradebook has one). The instructions live on the assignment page; do not open
-  attempt pages.
-- **LINK / FOLDER**: nothing to download. Mention useful links in the class note.
+  when the gradebook has one). Never open the attempt page. The instructions and attached files
+  are readable without it: run this on a light tab, then `get_page_text`:
+  ```js
+  const r = await (await fetch('/learn/api/public/v1/courses/COURSE/contents/ITEM_ID', {credentials: 'include'})).json();
+  const h = (r.contentHandler && r.contentHandler.instructions) || r.body || '';
+  document.body.innerHTML = '<pre></pre>';
+  document.querySelector('pre').textContent = h.replace(/<a\b[^>]*?href="([^"]+)"[^>]*>/gi, ' [LINK $1] ').replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ');
+  'done'
+  ```
+  Each `[LINK ...]` is an attached file. `navigate` a fresh tab to it soon (the link is signed and
+  stops working after about 15 minutes; put `https://blackboard.olemiss.edu` in front if it starts
+  with `/`), then `bbsweep grab <the item's id> --to assignments --name "<file title>"`. Lockdown
+  tests and labs usually have no instructions. A rubric is only on the assignment page: tell the
+  student to look there.
+- **LINK**: nothing to download. The target is `contentHandler.url` on that same endpoint (recorded
+  lectures may need the student's own login). Mention useful links in the class note.
+- **FOLDER**: nothing to download. A folder that should have something in it but looks empty is
+  still hidden from students; check it next sweep.
 - **ANNOUNCEMENT**: add it to the class note (date, title, one to three lines). If it announces a
   test, quiz, deadline, room change or cancelled class, act on it in §6 and the report.
+  Files attached to an announcement are not items: look for `/bbcswebdav/` links in `body.rawText`
+  at `/learn/api/v1/courses/COURSE/announcements/ANNOUNCEMENT_ID`, download like a FILE, move it
+  into the class folder, and run `bbsweep extract <file> <file>.md`.
 - A CHANGED file has a newer version on Blackboard: download it again. `grab` keeps the old copy
   and saves the new one as `<name> (updated <date>)`.
+- Something can show up as NEW with an old modified date: instructors build items early and make
+  them visible later. An item or gradebook column that disappears is usually being graded and comes
+  back; keep the local copy.
 
 ## 4. Download files
 
@@ -132,10 +155,23 @@ If the file is in Downloads under a different name, `bbsweep grab <id> --to ... 
 ## 5. Submission and grade status (quick)
 
 In the **pull tab** (it still holds the pulled data): run `bbsweep script grades` as
-`javascript_tool` text, wait ~5 s, then `get_page_text`. Each line is
-`course | item | due (UTC) | status | grade | attempts`; status `no attempt` means nothing has been
-submitted. Use it to mark "submitted / not yet" for everything due in the next 14 days, and to
-mention newly graded items in one line each.
+`javascript_tool` text, wait ~15 s, then `get_page_text`. The text starts with `GRADES` once it is
+finished; if it still shows the pull, wait a little longer. Run this every sweep, because grades
+post without the item itself changing. Each line is
+`course | item | due (UTC) | status | grade | attempts | submitted | grade changed`:
+
+- `no attempt`: nothing has been submitted (this includes team items that Blackboard labels
+  NeedsGrading with no attempt).
+- `draft open, NOT submitted`: an attempt was opened but not handed in. Flag it, especially when
+  only one attempt is allowed.
+- `check failed`: Blackboard did not answer. Run it again; never report it as not submitted.
+- `hidden right now`: usually while the instructor grades. The item comes back.
+- `submitted` is the real hand-in time; `opened` is only when the attempt was started.
+- `gradebook-only item`: a column the instructor made by hand. Its due date is often just the moment
+  it was created, so do not treat it as a deadline unless the class says so.
+
+Use it to mark "submitted / not yet" for everything due in the next 14 days, and to mention newly
+graded items in one line each.
 
 ## 6. Reminders and calendar
 
@@ -151,7 +187,7 @@ mention newly graded items in one line each.
   Final exam times come from the syllabus or the registrar's finals schedule. No calendar set up:
   add the exam as a reminder instead.
 - If Blackboard moves a deadline, say so in the report and let the student fix the existing
-  reminder (the helper only adds). Do not add reminders for items already past due; if one was
+  reminder (the helper only adds). When two sources disagree, go with the earlier date. Do not add reminders for items already past due; if one was
   never submitted, flag it in the report instead.
 - AppleScript cannot see reminders nested as subtasks, so keep this list flat.
 - The first time, macOS asks whether the app may control Reminders and Calendar. The student
@@ -173,6 +209,10 @@ mention newly graded items in one line each.
   it, open a fresh tab, park it on the light page.
 - `javascript_tool` output is cut at ~4 KB and hides anything containing `?`. That is why the
   scripts write to the page body or hand off a JSON download.
+- `TypeError: Failed to fetch`: `navigate` the tab back to the light page and run it again.
+- `get_page_text` stops at about 50,000 characters. The full pull report is in `_last_pull.md`.
+- Anything kept on `window` is lost when the tab navigates, so do §5 before reusing the pull tab.
+- The Blackboard session can also expire in the middle of the day; use the sign-in step in §2.
 - New semester: classes switch over by themselves once the new term starts, and `ingest` lists
   them as classes without folders. Ask whether to start a new root folder for the semester
   (`bbsweep setup --root "<new folder>"`). Each root folder has its own manifest.
