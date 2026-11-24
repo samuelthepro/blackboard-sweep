@@ -187,8 +187,8 @@ graded items in one line each.
   Final exam times come from the syllabus or the registrar's finals schedule. No calendar set up:
   add the exam as a reminder instead.
 - If Blackboard moves a deadline, say so in the report and let the student fix the existing
-  reminder (the helper only adds). When two sources disagree, go with the earlier date. Do not add reminders for items already past due; if one was
-  never submitted, flag it in the report instead.
+  reminder (the helper only adds). When two sources disagree, go with the earlier date. Do not add
+  reminders for items already past due; if one was never submitted, flag it in the report instead.
 - AppleScript cannot see reminders nested as subtasks, so keep this list flat.
 - The first time, macOS asks whether the app may control Reminders and Calendar. The student
   clicks OK.
